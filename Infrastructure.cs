@@ -2,6 +2,7 @@
 {
   public static void Run((int day, int? part, bool answer) aocArgs)
   {
+    var timer = System.Diagnostics.Stopwatch.StartNew();
     var puzzles = AppDomain.
       CurrentDomain
       .GetAssemblies()
@@ -12,7 +13,19 @@
           !aocArgs.part.HasValue || aocArgs.part.Value == 1,
           !aocArgs.part.HasValue || aocArgs.part.Value == 2,
           !aocArgs.answer } ) ?? throw new ArgumentNullException(nameof(puzzle)));
-    Console.WriteLine(puzzles.First(x => x.Day == aocArgs.day));
+
+    string Solve(Puzzle p)
+    {
+      var solveTimer = System.Diagnostics.Stopwatch.StartNew();
+      string solve = p.ToString();
+      solveTimer.Stop();
+      Console.WriteLine($"@Solve Time: {solveTimer.ElapsedMilliseconds}ms".Replace("@", Environment.NewLine));
+      return solve;
+    }
+    
+    timer.Stop();
+    Console.WriteLine($"@Puzzle Bootstrap Time: {timer.ElapsedMilliseconds}ms".Replace("@", Environment.NewLine));
+    Console.WriteLine(Solve(puzzles.First(x => x.Day == aocArgs.day)));
   }
 }
 
