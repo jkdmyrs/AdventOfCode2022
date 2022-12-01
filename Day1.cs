@@ -9,13 +9,31 @@ internal class Day1 : Puzzle
 
   private int Part1Ans()
   {
-    return 0;
+    List<int> sums = new();
+    var lines = this.PuzzleInput.Value;
+    do
+    {
+      var emptyIndex = lines.ToList().IndexOf(string.Empty);
+      sums.Add((emptyIndex == -1 ? lines : lines.Take(emptyIndex)).Select(int.Parse).Sum());
+      lines = lines.Skip((emptyIndex == -1 ? 0 : emptyIndex) + 1);
+    }
+    while(lines.Any());
+    return sums.Max();
   }
 
   public override string Part2() => this.Part2Ans().ToString();
 
   private int Part2Ans()
   {
-    return 0;
+    List<int> sums = new();
+    var lines = this.PuzzleInput.Value;
+    do
+    {
+      var emptyIndex = lines.ToList().IndexOf(string.Empty);
+      sums.Add((emptyIndex == -1 ? lines : lines.Take(emptyIndex)).Select(int.Parse).Sum());
+      lines = lines.Skip((emptyIndex == -1 ? 0 : emptyIndex) + 1);
+    }
+    while(lines.Any());
+    return sums.OrderByDescending(x => x).Take(3).Sum();
   }
 }
