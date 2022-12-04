@@ -1,0 +1,1 @@
+(dotnet run -- -s $AOC_SESSION -d $1 -a) 2>&1 | tee "./results/day$1.txt"

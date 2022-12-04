@@ -10,7 +10,7 @@ internal class Day1 : Puzzle
   private int Part1Ans()
   {
     List<int> sums = new();
-    var lines = this.PuzzleInput.Value;
+    IEnumerable<string> lines = this.PuzzleInput;
     do
     {
       var emptyIndex = lines.ToList().IndexOf(string.Empty);
@@ -26,7 +26,7 @@ internal class Day1 : Puzzle
   private int Part2Ans()
   {
     List<int> sums = new();
-    var lines = this.PuzzleInput.Value;
+    IEnumerable<string> lines = this.PuzzleInput;
     do
     {
       var emptyIndex = lines.ToList().IndexOf(string.Empty);

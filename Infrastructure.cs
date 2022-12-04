@@ -1,6 +1,6 @@
 ﻿internal static class PuzzleRunner
 {
-  public static void Run((int day, int? part, bool answer) aocArgs)
+  public static async Task Run((int day, int? part, bool answer, string? session) aocArgs)
   {
     var timer = System.Diagnostics.Stopwatch.StartNew();
     var puzzles = AppDomain.
@@ -14,8 +14,9 @@
           !aocArgs.part.HasValue || aocArgs.part.Value == 2,
           !aocArgs.answer } ) ?? throw new ArgumentNullException(nameof(puzzle)));
 
-    string Solve(Puzzle p)
+    async Task<string> Solve(Puzzle p, string? session)
     {
+      await p.Load(session).ConfigureAwait(false);
       var solveTimer = System.Diagnostics.Stopwatch.StartNew();
       string solve = p.ToString();
       solveTimer.Stop();
@@ -25,7 +26,8 @@
     
     timer.Stop();
     Console.WriteLine($"@Puzzle Bootstrap Time: {timer.ElapsedMilliseconds}ms".Replace("@", Environment.NewLine));
-    Console.WriteLine(Solve(puzzles.First(x => x.Day == aocArgs.day)));
+    var answer = await Solve(puzzles.First(x => x.Day == aocArgs.day), aocArgs.session).ConfigureAwait(false);
+    Console.WriteLine(answer);
   }
 }
 
@@ -37,36 +39,51 @@ internal static class CliParser
     public string? Val { get; init; }
   }
 
-  public static (int day, int? part, bool answer) Parse(string[] args)
+  public static (int day, int? part, bool answer, string? session) Parse(string[] args)
   {
     var cliArgs = string.Join(' ', args)
       .Split('-')
       .Select(x => x.Trim().GetArg())
       .Skip(1);
+    string? session = cliArgs.FirstOrDefault(x => x.Arg == "s")?.Val ?? Environment.GetEnvironmentVariable("AOC_SESSION");
     return (
       cliArgs.First(x => x.Arg == "d").Val,
       cliArgs.FirstOrDefault(x => x.Arg == "p")?.Val,
-      cliArgs.Any(x => x.Arg == "a")
+      cliArgs.Any(x => x.Arg == "a"),
+      session
     ).ToOutput();
   }
 }
 
+public class AsyncLazy<T> : Lazy<Task<T>>
+{
+  public AsyncLazy(Func<T> valueFactory) :
+    base(() => Task.Factory.StartNew(valueFactory)) { }
+
+  public AsyncLazy(Func<Task<T>> taskFactory) :
+    base(() => Task.Factory.StartNew(() => taskFactory()).Unwrap()) { }
+}
+
 internal abstract class Puzzle
 {
-  public readonly Lazy<IEnumerable<string>> PuzzleInput;
+  private readonly AsyncLazy<IEnumerable<string>> _puzzleInput;
   public abstract string Part1();
   public abstract string Part2();
   public readonly int Day;
   public readonly bool ExecutePart1;
   public readonly bool ExecutePart2;
   private bool _ioError = false;
+  private bool _isPractice;
+  public List<string> PuzzleInput = Array.Empty<string>().ToList();
+  private string? _session = null;
 
   public Puzzle(int day, bool part1, bool part2, bool practice)
   {
     Day = day;
     ExecutePart1 = part1;
     ExecutePart2 = part2;
-    PuzzleInput = new Lazy<IEnumerable<string>>(() =>
+    _isPractice = practice;
+    _puzzleInput = new AsyncLazy<IEnumerable<string>>(async () =>
     {
       var timer = System.Diagnostics.Stopwatch.StartNew();
       List<string>? lines = null;
@@ -79,25 +96,68 @@ internal abstract class Puzzle
       catch
       {
         _ioError = true;
-        Console.WriteLine("@I/O ERROR: file not found".Replace("@", Environment.NewLine));
+        Console.WriteLine("I/O ERROR: file not found");
       }
+    
+      // fallback to AOC API for our puzzle input
+      // non-practice only
+      if (!_isPractice && (!lines?.Any() ?? true))
+      {
+        Console.WriteLine("Attempting to fetch input");
+        var request = new HttpRequestMessage();
+        request.Method = HttpMethod.Get;
+        request.Headers.TryAddWithoutValidation("User-Agent", "https://github.com/jkdmyrs/advent-of-code-csharp by jk@dmyrs.com");
+        request.RequestUri = new Uri($"https://adventofcode.com/2022/day/{Day}/input");
+        request.Headers.Add("cookie", $"session={this._session ?? string.Empty}");
+        var response = await new HttpClient().SendAsync(request).ConfigureAwait(false);
+        try
+        {
+          response.EnsureSuccessStatusCode();
+          var temp = (await response.Content.ReadAsStringAsync().ConfigureAwait(false)).Split(Environment.NewLine);
+          lines = temp.Take(temp.Count()-1).ToList();
+          if (lines.Any())
+          {
+            try
+            {
+              await File.WriteAllTextAsync(@$"input/{Day.ToString()}.txt", string.Join(Environment.NewLine, lines)).ConfigureAwait(false);
+            }
+            catch
+            {
+              _ioError = true;
+              Console.WriteLine("I/O ERROR: failed to write input file");
+            }
+          }
+          else
+          {
+            _ioError = true;
+            Console.WriteLine("I/O ERROR: downloaded file was empty");
+          }
+        }
+        catch 
+        {
+          _ioError = true;
+          Console.WriteLine("I/O ERROR: failed to download input file");
+        }
+      }
+
       timer.Stop();
       Console.WriteLine($"I/O time: {timer.ElapsedMilliseconds}ms@".Replace("@", Environment.NewLine));
       return lines ?? new List<string>();
     });
   }
 
-  private void Load()
+  public async Task Load(string? session)
   {
-    _ = PuzzleInput.Value;
+    _session = session;
+    // force the lazy loaded IO to happen
+    PuzzleInput = (await _puzzleInput.Value.ConfigureAwait(false)).ToList();
   }
 
   public override string ToString()
   {
-    this.Load();
     string part1 = string.Empty;
     string part2 = string.Empty;
-    if (_ioError)
+    if (_ioError && !PuzzleInput.Any())
       return string.Empty;
     if (this.ExecutePart1)
     {
@@ -137,8 +197,8 @@ internal static class InternalExtensions
     };
   }
 
-  public static (int day, int? part, bool answer) ToOutput(this (string? x, string? y, bool z) val)
+  public static (int day, int? part, bool answer, string? session) ToOutput(this (string? x, string? y, bool z, string? session) val)
   {
-    return (int.Parse(val.x ?? throw new ArgumentNullException(nameof(val))), int.TryParse(val.y, out int part) ? part : null, val.z);
+    return (int.Parse(val.x ?? throw new ArgumentNullException(nameof(val))), int.TryParse(val.y, out int part) ? part : null, val.z, val.session);
   }
 }

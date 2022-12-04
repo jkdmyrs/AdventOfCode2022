@@ -46,7 +46,7 @@ internal class Day2 : Puzzle
       }
       return me;
     }
-    return this.PuzzleInput.Value.Select(ScoreRound).Sum();
+    return this.PuzzleInput.Select(ScoreRound).Sum();
   }
 
   public override string Part2() => this.Part2Ans().ToString();
@@ -115,6 +115,6 @@ internal class Day2 : Puzzle
       }
       return me;
     }
-    return this.PuzzleInput.Value.Select(ScoreRound).Sum();
+    return this.PuzzleInput.Select(ScoreRound).Sum();
   }
 }

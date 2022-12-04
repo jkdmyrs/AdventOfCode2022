@@ -1,0 +1,1 @@
+dotnet run -- -d $1

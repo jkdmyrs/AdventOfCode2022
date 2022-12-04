@@ -42,7 +42,7 @@ internal class Day4 : Puzzle
 
   private int Part1Ans()
   {
-    var elfPairs = this.PuzzleInput.Value.Select(ParseLine);
+    var elfPairs = this.PuzzleInput.Select(ParseLine);
     var containsResults = elfPairs.Select(FullyContains);
     return containsResults.Where(x => x).Count();
   }
@@ -51,7 +51,7 @@ internal class Day4 : Puzzle
 
   private int Part2Ans()
   {
-    var elfPairs = this.PuzzleInput.Value.Select(ParseLine);
+    var elfPairs = this.PuzzleInput.Select(ParseLine);
 
     int count = 0;
 

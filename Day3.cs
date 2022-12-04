@@ -30,7 +30,7 @@ internal class Day3 : Puzzle
 
   private int Part1Ans()
   {
-    return PuzzleInput.Value
+    return this.PuzzleInput
       .Select(ParseLine)
       .Select(FindIntersect)
       .Select(CalcPriority)
@@ -59,7 +59,7 @@ internal class Day3 : Puzzle
 
   private int Part2Ans()
   {
-    var lines = this.PuzzleInput.Value.Select(ParseLine);
+    var lines = this.PuzzleInput.Select(ParseLine);
     var groups = ParseGroups(lines);
     return groups.Select(FindGroupIntersect).Select(CalcPriority).Sum();
   }
