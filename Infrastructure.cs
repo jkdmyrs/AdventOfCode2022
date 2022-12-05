@@ -1,7 +1,8 @@
 ﻿internal static class PuzzleRunner
 {
-  public static async Task Run((int day, int? part, bool answer, string? session) aocArgs)
+  public static async Task Run((int, int?, bool, string?) aocArgs)
   {
+    var (day, part, answer, session) = aocArgs;
     var timer = System.Diagnostics.Stopwatch.StartNew();
     var puzzles = AppDomain.
       CurrentDomain
@@ -10,24 +11,24 @@
       .Where(t => t.IsSubclassOf(typeof(Puzzle)))
       .Select(puzzle => (Puzzle?)puzzle?.GetConstructor(new[] { typeof(bool), typeof(bool), typeof(bool) })
         ?.Invoke(new object[] {
-          !aocArgs.part.HasValue || aocArgs.part.Value == 1,
-          !aocArgs.part.HasValue || aocArgs.part.Value == 2,
-          !aocArgs.answer } ) ?? throw new ArgumentNullException(nameof(puzzle)));
+          !part.HasValue || part.Value == 1,
+          !part.HasValue || part.Value == 2,
+          !answer }) ?? throw new ArgumentNullException(nameof(puzzle)));
+
+    timer.Stop();
+    Console.WriteLine($"@Puzzle Bootstrap Time: {timer.ElapsedMilliseconds}ms".Replace("@", Environment.NewLine));
 
     async Task<string> Solve(Puzzle p, string? session)
     {
       await p.Load(session).ConfigureAwait(false);
       var solveTimer = System.Diagnostics.Stopwatch.StartNew();
-      string solve = p.ToString();
+      string solve = p.Solve();
       solveTimer.Stop();
       Console.WriteLine($"@Solve Time: {solveTimer.ElapsedMilliseconds}ms".Replace("@", Environment.NewLine));
       return solve;
     }
-    
-    timer.Stop();
-    Console.WriteLine($"@Puzzle Bootstrap Time: {timer.ElapsedMilliseconds}ms".Replace("@", Environment.NewLine));
-    var answer = await Solve(puzzles.First(x => x.Day == aocArgs.day), aocArgs.session).ConfigureAwait(false);
-    Console.WriteLine(answer);
+
+    Console.WriteLine(await Solve(puzzles.First(x => x.Day == day), session).ConfigureAwait(false));
   }
 }
 
@@ -55,13 +56,15 @@ internal static class CliParser
   }
 }
 
-public class AsyncLazy<T> : Lazy<Task<T>>
+internal class AsyncLazy<T> : Lazy<Task<T>>
 {
   public AsyncLazy(Func<T> valueFactory) :
-    base(() => Task.Factory.StartNew(valueFactory)) { }
+    base(() => Task.Factory.StartNew(valueFactory))
+  { }
 
   public AsyncLazy(Func<Task<T>> taskFactory) :
-    base(() => Task.Factory.StartNew(() => taskFactory()).Unwrap()) { }
+    base(() => Task.Factory.StartNew(() => taskFactory()).Unwrap())
+  { }
 }
 
 internal abstract class Puzzle
@@ -86,19 +89,18 @@ internal abstract class Puzzle
     _puzzleInput = new AsyncLazy<IEnumerable<string>>(async () =>
     {
       var timer = System.Diagnostics.Stopwatch.StartNew();
+      string filePath = Path.Combine("input", _isPractice ? Path.Combine("practice", $"{Day}.txt") : $"{Day}.txt");
       List<string>? lines = null;
       try
       {
-        lines = File
-          .ReadAllLines(@$"input/{day.ToString() + (practice ? "_practice" : string.Empty)}.txt")
-          .ToList();
+        lines = File.ReadAllLines(filePath).ToList();
       }
       catch
       {
         _ioError = true;
         Console.WriteLine("I/O ERROR: file not found");
       }
-    
+
       // fallback to AOC API for our puzzle input
       // non-practice only
       if (!_isPractice && (!lines?.Any() ?? true))
@@ -109,17 +111,17 @@ internal abstract class Puzzle
         request.Headers.TryAddWithoutValidation("User-Agent", "https://github.com/jkdmyrs/advent-of-code-csharp by jk@dmyrs.com");
         request.RequestUri = new Uri($"https://adventofcode.com/2022/day/{Day}/input");
         request.Headers.Add("cookie", $"session={this._session ?? string.Empty}");
-        var response = await new HttpClient().SendAsync(request).ConfigureAwait(false);
         try
         {
+          var response = await new HttpClient().SendAsync(request).ConfigureAwait(false);
           response.EnsureSuccessStatusCode();
           var temp = (await response.Content.ReadAsStringAsync().ConfigureAwait(false)).Split(Environment.NewLine);
-          lines = temp.Take(temp.Count()-1).ToList();
+          lines = temp.Take(temp.Count() - 1).ToList();
           if (lines.Any())
           {
             try
             {
-              await File.WriteAllTextAsync(@$"input/{Day.ToString()}.txt", string.Join(Environment.NewLine, lines)).ConfigureAwait(false);
+              await File.WriteAllTextAsync(filePath, string.Join(Environment.NewLine, lines)).ConfigureAwait(false);
             }
             catch
             {
@@ -133,7 +135,7 @@ internal abstract class Puzzle
             Console.WriteLine("I/O ERROR: downloaded file was empty");
           }
         }
-        catch 
+        catch
         {
           _ioError = true;
           Console.WriteLine("I/O ERROR: failed to download input file");
@@ -149,7 +151,7 @@ internal abstract class Puzzle
   public async Task Load(string? session)
   {
     _session = session;
-    // force the lazy loaded IO to happen
+    // force the lazy loaded async IO to happen
     PuzzleInput = (await _puzzleInput.Value.ConfigureAwait(false)).ToList();
   }
 
@@ -158,7 +160,11 @@ internal abstract class Puzzle
     string part1 = string.Empty;
     string part2 = string.Empty;
     if (_ioError && !PuzzleInput.Any())
+    {
+      Console.WriteLine($"Unable to solve due to IO error.");
       return string.Empty;
+    }
+
     if (this.ExecutePart1)
     {
       System.Diagnostics.Stopwatch timer = System.Diagnostics.Stopwatch.StartNew();
@@ -174,8 +180,11 @@ internal abstract class Puzzle
       timer.Stop();
       Console.WriteLine($"Part 2 Duration: {timer.ElapsedMilliseconds}ms");
     }
+
     return $"{part1}{part2}".Replace("@", Environment.NewLine);
   }
+
+  public string Solve() => this.ToString();
 }
 
 internal static class InternalExtensions
