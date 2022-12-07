@@ -7,7 +7,7 @@ namespace AoC
       var parsed = CliParser.Parse(args);
       var (year, day, part, solve, upload, session) = parsed;
 
-      Console.WriteLine($"AOC 2022");
+      Console.WriteLine($"AOC {year}");
       var display1 = part.HasValue ? $" {part.Value}" : "s 1+2";
       var display2 = solve ? "Real Input" : "Practice Input";
       Console.WriteLine($"Day {day}, Part{display1} -  {display2}");
