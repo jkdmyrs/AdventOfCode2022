@@ -4,12 +4,12 @@ Day 1, Parts 1+2 -  Real Input
 Puzzle Bootstrap Time: 0ms
 I/O time: 1ms
 
-Part 1 Duration: 8ms
-Part 2 Duration: 8ms
+Part 1 Duration: 4ms
+Part 2 Duration: 2ms
 
-Solve Time: 17ms
+Solve Time: 7ms
 
-Part 1 Answer: 68787
-Part 2 Answer: 198041
+Part 1 Answer: 3291760
+Part 2 Answer: 4934767
 
-Total Time: 112ms
+Total Time: 102ms
