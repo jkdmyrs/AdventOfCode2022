@@ -1,1 +1,1 @@
-dotnet run -- -d $1
+dotnet run --project AoC/AoC.csproj -- -d $1

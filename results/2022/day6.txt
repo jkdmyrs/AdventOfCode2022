@@ -2,14 +2,14 @@ AOC 2022
 Day 6, Parts 1+2 -  Real Input
 
 Puzzle Bootstrap Time: 0ms
-I/O time: 2ms
+I/O time: 1ms
 
 Part 1 Duration: 22ms
 Part 2 Duration: 20ms
 
-Solve Time: 43ms
+Solve Time: 42ms
 
 Part 1 Answer: 1953
-Part 2 Asnwer: 2301
+Part 2 Answer: 2301
 
-Total Time: 114ms
+Total Time: 138ms

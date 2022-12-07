@@ -7,6 +7,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\AoC.Infra\AoC.Infra.csproj" />
+  </ItemGroup>
   <ProjectExtensions>
     <MonoDevelop>
       <Properties>
