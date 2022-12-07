@@ -155,7 +155,7 @@ internal abstract class Puzzle
     PuzzleInput = (await _puzzleInput.Value.ConfigureAwait(false)).ToList();
   }
 
-  public override string ToString()
+  public string Solve()
   {
     string part1 = string.Empty;
     string part2 = string.Empty;
@@ -183,8 +183,6 @@ internal abstract class Puzzle
 
     return $"{part1}{part2}".Replace("@", Environment.NewLine);
   }
-
-  public string Solve() => this.ToString();
 }
 
 internal static class InternalExtensions
