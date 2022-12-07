@@ -53,9 +53,9 @@ namespace AoC.Infra
           else
             Console.WriteLine("Upload result: Incorrect");
         }
-        catch
+        catch (Exception e)
         {
-          Console.WriteLine("Upload failed");
+          Console.WriteLine("Upload failed: " + e.Message);
         }
       }
 

@@ -32,6 +32,11 @@ namespace AoC.Infra
       return (int.TryParse(yearStr, out int year) ? year : StaticSettings.Year, int.Parse(dayStr ?? throw new ArgumentNullException(nameof(val))), int.TryParse(partStr, out int part) ? part : null, solve, upload, session);
     }
 
+    public static void AddContentHeader(this HttpRequestMessage req)
+    {
+      req.Headers.TryAddWithoutValidation("Content-Type", "application/x-www-form-urlencoded");
+    }
+
     public static void AddUserAgent(this HttpRequestMessage req)
     {
       req.Headers.TryAddWithoutValidation("User-Agent", "https://github.com/jkdmyrs/advent-of-code-csharp by jk@dmyrs.com");
@@ -55,11 +60,16 @@ namespace AoC.Infra
 
     public static async Task<bool> AnswerPuzzle(this HttpClient httpClient, int year, int day, int part, string answer, string session)
     {
-      var request = new HttpRequestMessage(HttpMethod.Post, new Uri($"https://adventofcode.com/{year}/day/{day}/input"));
+      var request = new HttpRequestMessage(HttpMethod.Post, new Uri($"https://adventofcode.com/{year}/day/{day}/answer"));
       // add json content to the request
-      request.Content = new StringContent($"{{\"level\":{part},\"answer\":\"{answer}\"}}");
+      request.Content = new FormUrlEncodedContent(new List<KeyValuePair<string, string>>()
+      {
+        new("level", part.ToString()),
+        new("answer", answer)
+      });
       request.AddUserAgent();
       request.AddSessionToken(session);
+      request.AddContentHeader();
       var response = await new HttpClient().SendAsync(request).ConfigureAwait(false);
       response.EnsureSuccessStatusCode();
       var temp = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -71,9 +81,13 @@ namespace AoC.Infra
       {
         return false;
       }
+      else if (temp.Contains("You gave an answer too recently"))
+      {
+        throw new Exception("AoC submission rate limit exceeded");
+      }
       else
       {
-        throw new Exception("invalid response from server");
+        throw new Exception("Unexpected response from AoC");
       }
     }
   }
