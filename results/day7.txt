@@ -1,0 +1,15 @@
+AOC 2022
+Day 7, Parts 1+2 -  Real Input
+
+Puzzle Bootstrap Time: 0ms
+I/O time: 3ms
+
+Part 1 Duration: 11ms
+Part 2 Duration: 3ms
+
+Solve Time: 15ms
+
+Part 1 Answer: 1243729
+Part 2 Asnwer: 4443914
+
+Total Time: 85ms
