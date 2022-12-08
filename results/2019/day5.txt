@@ -1,0 +1,26 @@
+AOC 2019
+Day 5, Parts 1+2 -  Real Input
+
+Puzzle Bootstrap Time: 1ms
+I/O time: 0ms
+
+0
+0
+0
+0
+0
+0
+0
+0
+0
+14155342
+Part 1 Duration: 9ms
+8684145
+Part 2 Duration: 1ms
+
+Solve Time: 11ms
+
+Part 1 Answer: 14155342
+Part 2 Answer: 8684145
+
+Total Time: 143ms

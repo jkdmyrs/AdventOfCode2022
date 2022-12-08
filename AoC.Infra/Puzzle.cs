@@ -30,7 +30,7 @@ namespace AoC.Infra
       string filePath = Path.Combine(StaticSettings.ProjectBasePath, "input", Year.ToString(), _isPractice ? Path.Combine("practice", $"{Day}.txt") : $"{Day}.txt");
       // we might have a double "AoC" in the path depending on OS
       // remove it
-      filePath = filePath.Replace(Path.Combine("AoC","AoC"), "AOC");
+      filePath = filePath.Replace(Path.Combine("AoC","AoC"), "AoC");
       List<string>? lines = null;
       try
       {
