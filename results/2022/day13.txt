@@ -5,11 +5,11 @@ Puzzle Bootstrap Time: 0ms
 I/O time: 0ms
 
 Part 1 Duration: 12ms
-Part 2 Duration: 5ms
+Part 2 Duration: 28ms
 
-Solve Time: 17ms
+Solve Time: 40ms
 
 Part 1 Answer: 6086
-Part 2 Answer: 0
+Part 2 Answer: 27930
 
-Total Time: 112ms
+Total Time: 135ms

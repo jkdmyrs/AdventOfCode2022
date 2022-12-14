@@ -10,6 +10,20 @@ namespace AOC.Year_2022
     public override string Part1() => this.Part1Ans().ToString();
     public override string Part2() => this.Part2Ans().ToString();
 
+    private class PacketComparer : IComparer<List<PacketValue>>
+    {
+      public int Compare(List<PacketValue>? x, List<PacketValue>? y)
+      {
+        if (x == null)
+          throw new ArgumentNullException(nameof(x));
+        if (y == null)
+          throw new ArgumentNullException(nameof(y));
+
+        var inOrder = IsInOrder(x, y);
+        return inOrder ? -1 : 1;
+      }
+    }
+
     internal class PacketValue
     {
       public PacketValueType Type { get; set; }
@@ -50,7 +64,7 @@ namespace AOC.Year_2022
       packet.List.Add(newPacket);
     }
 
-    private List<List<PacketValue>> ParsePackets()
+    private List<List<PacketValue>> ParsePackets(List<List<PacketValue>> packetsToAdd = null)
     {
       var packets = new List<List<PacketValue>>();
       this.PuzzleInput.Where(x => !string.IsNullOrWhiteSpace(x)).ToList().ForEach(line =>
@@ -110,7 +124,7 @@ namespace AOC.Year_2022
         }
         packets.Add(packet);
       });
-      return packets;
+      return packets.Concat(packetsToAdd ?? new List<List<PacketValue>>()).ToList();
     }
 
     private List<PacketGroup> BuildGroups(IEnumerable<List<PacketValue>> packets)
@@ -124,7 +138,7 @@ namespace AOC.Year_2022
       return groups;
     }
 
-    private bool? IsInOrder(PacketValue left, PacketValue right)
+    private static bool? IsInOrder(PacketValue left, PacketValue right)
     {
       if (left.Type == PacketValueType.LIST && !left.List.Any())
       {
@@ -193,6 +207,49 @@ namespace AOC.Year_2022
       }
     }
 
+    private static bool IsInOrder(List<PacketValue> a, List<PacketValue> b)
+    {
+      int j = 0;
+      bool? inOrder = false;
+      do
+      {
+        PacketValue left, right;
+        try
+        {
+          left = a[j];
+        }
+        catch
+        {
+          inOrder = true;
+          break;
+        }
+        try
+        {
+          right = b[j];
+        }
+        catch
+        {
+          inOrder = false;
+          break;
+        }
+
+        inOrder = IsInOrder(left, right);
+        if (inOrder.HasValue)
+        {
+          break;
+        }
+
+        j++;
+      }
+      while (true);
+
+      if (inOrder.HasValue && inOrder.Value)
+      {
+        return true;
+      }
+      return false;
+    }
+
     private int Part1Ans()
     {
       var packets = ParsePackets();
@@ -203,41 +260,7 @@ namespace AOC.Year_2022
       groups.ForEach(group =>
       {
         var (a, b) = group;
-        int j = 0;
-        bool? inOrder = false;
-        do
-        {
-          PacketValue left, right;
-          try
-          {
-            left = a[j];
-          }
-          catch
-          {
-            inOrder = true;
-            break;
-          }
-          try
-          {
-            right = b[j];
-          }
-          catch
-          {
-            inOrder = false;
-            break;
-          }
-
-          inOrder = IsInOrder(left, right);
-          if (inOrder.HasValue)
-          {
-            break;
-          }
-
-          j++;
-        }
-        while (true);
-
-        if (inOrder.HasValue && inOrder.Value)
+        if (IsInOrder(a, b))
         {
           indexes.Add(i);
         }
@@ -248,55 +271,14 @@ namespace AOC.Year_2022
 
     private int Part2Ans()
     {
-      var packets = ParsePackets();
-      var groups = BuildGroups(packets);
-
-      List<int> indexes = new();
-      int i = 1;
-      groups.ForEach(group =>
-      {
-        var (a, b) = group;
-        int j = 0;
-        bool? inOrder = false;
-        do
-        {
-          PacketValue left, right;
-          try
-          {
-            left = a[j];
-          }
-          catch
-          {
-            inOrder = true;
-            break;
-          }
-          try
-          {
-            right = b[j];
-          }
-          catch
-          {
-            inOrder = false;
-            break;
-          }
-
-          inOrder = IsInOrder(left, right);
-          if (inOrder.HasValue)
-          {
-            break;
-          }
-
-          j++;
-        }
-        while (true);
-
-        if (inOrder.HasValue && inOrder.Value)
-        {
-          indexes.Add(i);
-        }
-        i++;
-      });
-      return 0;
+      var div2Packet = new List<PacketValue> { new PacketValue { Type = PacketValueType.LIST, List = new List<PacketValue> { new PacketValue { Type = PacketValueType.INT, Value = 2 } } } };
+      var div6Packet = new List<PacketValue> { new PacketValue { Type = PacketValueType.LIST, List = new List<PacketValue> { new PacketValue { Type = PacketValueType.INT, Value = 6 } } } };
+      var packets = ParsePackets(new List<List<PacketValue>> { div2Packet, div6Packet }).ToArray();
+      Array.Sort(packets, new PacketComparer());
+      var sorted = packets.ToList();
+      var div2Index = sorted.IndexOf(div2Packet) + 1;
+      var div6Index = sorted.IndexOf(div6Packet) + 1;
+      return div2Index * div6Index;
     }
   }
 }
