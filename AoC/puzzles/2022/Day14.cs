@@ -127,6 +127,30 @@ namespace AOC.Year_2022
       return grid;
     }
 
+    private void PrintGrid(Dictionary<Spot, char> grid)
+    {
+      var minX = grid.Min(x => x.Key.Item2);
+      var maxX = grid.Max(x => x.Key.Item2);
+      var maxY = grid.Max(x => x.Key.Item1);
+      for (int i = 0; i < maxY + 1; i++)
+      {
+        using StringWriter sw = new();
+        for (int j = minX; j < maxX - minX + 1; j++)
+        {
+          var spot = new Spot(i, j);
+          if (grid.TryGetValue(spot, out char c))
+          {
+            sw.Write(c);
+          }
+          else
+          {
+            sw.Write('.');
+          }
+        }
+        Console.WriteLine(sw.ToString());
+      }
+    }
+
     private int Part1Ans()
     {
       var minX = this.FindMinX();
@@ -135,6 +159,7 @@ namespace AOC.Year_2022
       var rocks = this.NormalizeRanges(minX);
       var expandedRocks = this.ExpandRocks(rocks);
       var grid = this.BuildGrid(expandedRocks, minX, maxX, maxY);
+
       bool createNew = true;
       Spot currentSpot = new Spot(0, 500 - minX);
       int count = 0;
@@ -161,7 +186,7 @@ namespace AOC.Year_2022
         else
         {
           // empty diagnal left
-          if (cx - 1 < 0 || cx + 1 > maxX)
+          if (cx - 1 < 0 || cx + 1 > maxX - minX)
           {
             break;
           }
@@ -188,15 +213,77 @@ namespace AOC.Year_2022
       }
       while (true);
 
-      //this.PrintGrid(grid);
       return count;
     }
 
     private int Part2Ans()
     {
-      // refactor to use a dictionary of points instead of a grid
+      var minX = this.FindMinX();
+      var maxX = this.FindMaxX();
+      var maxY = this.FindMaxY();
+      var rocks = this.NormalizeRanges(minX);
+      var expandedRocks = this.ExpandRocks(rocks);
+      var grid = this.BuildGrid(expandedRocks, minX, maxX, maxY);
 
-      return 0;
+      bool createNew = true;
+      Spot currentSpot = new Spot(0, 500 - minX);
+      int count = 0;
+      do
+      {
+        try
+        {
+          if (createNew)
+          {
+            currentSpot = new Spot(0, 500 - minX);
+            createNew = false;
+          }
+
+          var (cy, cx) = currentSpot;
+          var down = grid.TryGetValue(new Spot(cy + 1, cx), out char below) ? below : cy + 1 >= maxY ? '#' : '.';
+          if (createNew && down == 'O')
+          {
+            break;
+          }
+
+          if (down == '.')
+          {
+            // empty space below
+            // move down
+            currentSpot = new Spot(cy + 1, cx);
+          }
+          else
+          {
+            // empty diagnal left
+            var dLeft = grid.TryGetValue(new Spot(cy + 1, cx - 1), out char diagLeft) ? diagLeft : cy + 1 >= maxY + 2 ? '#' : '.';
+            var dRight = grid.TryGetValue(new Spot(cy + 1, cx + 1), out char diagRight) ? diagRight : cy + 1 >= maxY + 2 ? '#' : '.';
+            if (dLeft == '.')
+            {
+              // move diagnal left
+              currentSpot = new Spot(cy + 1, cx - 1);
+            }
+            // empty diagnal right
+            else if (dRight == '.')
+            {
+              // move diagnal right
+              currentSpot = new Spot(cy + 1, cx + 1);
+            }
+            else
+            {
+              grid.Add(currentSpot, 'O');
+              count++;
+              createNew = true;
+            }
+          }
+        }
+        catch
+        {
+          break;
+        }
+      }
+      while (true);
+
+      //PrintGrid(grid);
+      return count;
     }
   }
 }
