@@ -64,7 +64,7 @@ namespace AOC.Year_2022
       packet.List.Add(newPacket);
     }
 
-    private List<List<PacketValue>> ParsePackets(List<List<PacketValue>> packetsToAdd = null)
+    private List<List<PacketValue>> ParsePackets(List<List<PacketValue>>? packetsToAdd = null)
     {
       var packets = new List<List<PacketValue>>();
       this.PuzzleInput.Where(x => !string.IsNullOrWhiteSpace(x)).ToList().ForEach(line =>
