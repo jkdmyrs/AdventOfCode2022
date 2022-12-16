@@ -58,7 +58,7 @@ namespace AoC.Infra
       return temp.Take(temp.Count() - 1).ToList();
     }
 
-    public static async Task<bool> AnswerPuzzle(this HttpClient httpClient, int year, int day, int part, string answer, string session)
+    public static async Task<(bool, string)> AnswerPuzzle(this HttpClient httpClient, int year, int day, int part, string answer, string session)
     {
       var request = new HttpRequestMessage(HttpMethod.Post, new Uri($"https://adventofcode.com/{year}/day/{day}/answer"));
       // add json content to the request
@@ -75,11 +75,11 @@ namespace AoC.Infra
       var temp = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
       if (temp.Contains("That's the right answer"))
       {
-        return true;
+        return (true, string.Empty);
       }
       else if (temp.Contains("That's not the right answer"))
       {
-        return false;
+        return (false, temp.ToLower().Contains("high") ? "high" : "low");
       }
       else if (temp.Contains("You gave an answer too recently"))
       {

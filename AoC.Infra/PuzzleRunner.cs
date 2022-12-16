@@ -42,7 +42,7 @@ namespace AoC.Infra
         try
         {
           Console.WriteLine("@Attempting to upload answer...".Replace("@", Environment.NewLine));
-          var uploadSuccess = await new HttpClient().AnswerPuzzle(
+          var (uploadSuccess, highOrLow) = await new HttpClient().AnswerPuzzle(
             p.Year,
             p.Day,
             part,
@@ -51,7 +51,7 @@ namespace AoC.Infra
           if (uploadSuccess)
             Console.WriteLine("Upload result: Correct");
           else
-            Console.WriteLine("Upload result: Incorrect");
+            Console.WriteLine($"Upload result: Incorrect... too {highOrLow}");
         }
         catch (Exception e)
         {
